@@ -6,15 +6,26 @@
 
 <style>
 
-body{
-margin:0;
-font-family:Orbitron,Arial;
-color:white;
-background:#020617;
-overflow-x:hidden;
+:root{
+--bg:#060b1a;
+--text:#e8f0ff;
+--muted:#98a4c5;
+--glass:rgba(13,20,42,.55);
+--border:rgba(255,255,255,.18);
+--primary:#4cc9f0;
+--accent:#b5179e;
 }
 
-/* PARTICLE BACKGROUND */
+*{box-sizing:border-box}
+
+body{
+margin:0;
+font-family:"Orbitron","Rajdhani",Arial,sans-serif;
+color:var(--text);
+background:radial-gradient(circle at 15% 20%,#102046 0%,#060b1a 50%),var(--bg);
+overflow-x:hidden;
+min-height:100vh;
+}
 
 #particles{
 position:fixed;
@@ -23,201 +34,234 @@ left:0;
 width:100%;
 height:100%;
 z-index:-1;
+opacity:.45;
 }
-
-/* HEADER */
 
 header{
 text-align:center;
-padding:20px;
-font-size:28px;
-letter-spacing:2px;
-background:linear-gradient(90deg,#00f5ff,#ff00c8);
+padding:30px 20px 8px;
+font-size:clamp(28px,4vw,44px);
+font-weight:800;
+letter-spacing:3px;
+text-transform:uppercase;
+background:linear-gradient(90deg,#6be8ff,#f744d0);
 -webkit-background-clip:text;
 -webkit-text-fill-color:transparent;
+text-shadow:0 0 30px rgba(76,201,240,.35);
 }
 
-/* SEARCH */
+.subtitle{
+text-align:center;
+margin:0;
+color:var(--muted);
+font-size:14px;
+letter-spacing:.5px;
+}
 
 .search{
 text-align:center;
-margin:20px;
+margin:26px auto;
+display:flex;
+justify-content:center;
+align-items:center;
+gap:12px;
+padding:0 18px;
+flex-wrap:wrap;
 }
 
 input{
-padding:12px;
-border-radius:8px;
-border:none;
+padding:14px 16px;
+border-radius:12px;
+border:1px solid var(--border);
+min-width:min(360px,92vw);
 background:rgba(255,255,255,.08);
-color:white;
-backdrop-filter:blur(10px);
+color:var(--text);
+backdrop-filter:blur(12px);
+outline:none;
+box-shadow:0 10px 30px rgba(0,0,0,.3);
+transition:.25s;
+}
+
+input:focus{
+border-color:rgba(76,201,240,.7);
+box-shadow:0 0 0 3px rgba(76,201,240,.18),0 10px 30px rgba(0,0,0,.3);
 }
 
 button{
-padding:12px 20px;
+padding:14px 24px;
 border:none;
-border-radius:8px;
-background:linear-gradient(90deg,#00f5ff,#ff00c8);
+border-radius:12px;
+background:linear-gradient(135deg,#4cc9f0,#b5179e);
 color:white;
 cursor:pointer;
+font-weight:700;
+letter-spacing:.5px;
+box-shadow:0 10px 28px rgba(181,23,158,.32);
+transition:.25s;
 }
 
-/* GLASS CARD */
+button:hover{
+transform:translateY(-2px);
+box-shadow:0 14px 34px rgba(181,23,158,.45);
+}
 
 .card{
-
-background:rgba(255,255,255,.05);
-backdrop-filter:blur(15px);
-border-radius:12px;
-padding:20px;
-margin:20px auto;
-max-width:900px;
-border:1px solid rgba(255,255,255,.1);
+background:var(--glass);
+backdrop-filter:blur(16px);
+border-radius:18px;
+padding:24px;
+margin:16px auto;
+max-width:960px;
+border:1px solid var(--border);
 position:relative;
 transition:.3s;
+box-shadow:0 24px 40px rgba(0,0,0,.35);
+overflow:hidden;
 }
 
-/* RGB BORDER */
-
 .card:before{
-
 content:"";
 position:absolute;
 top:-2px;
 left:-2px;
 right:-2px;
 bottom:-2px;
-background:linear-gradient(45deg,#00f5ff,#ff00c8,#00f5ff);
+background:linear-gradient(135deg,rgba(76,201,240,.55),rgba(181,23,158,.55),rgba(76,201,240,.3));
+z-index:-2;
+filter:blur(16px);
+opacity:.55;
+border-radius:18px;
+}
+
+.card:after{
+content:"";
+position:absolute;
+top:0;
+left:0;
+width:100%;
+height:100%;
+background:linear-gradient(120deg,rgba(255,255,255,.12),transparent 40%);
 z-index:-1;
-filter:blur(10px);
-opacity:.4;
-border-radius:14px;
-
 }
 
-/* PROFILE HEADER */
-
-.profile{
-
-text-align:center;
-
-}
+.profile{text-align:center}
 
 .banner{
-
 width:100%;
-border-radius:10px;
-opacity:.8;
-
+border-radius:14px;
+opacity:.92;
+height:230px;
+object-fit:cover;
+box-shadow:0 14px 34px rgba(0,0,0,.35);
 }
 
 .avatar{
-
-width:100px;
-border-radius:14px;
-margin-top:-50px;
-border:3px solid cyan;
-box-shadow:0 0 10px cyan;
-
+width:116px;
+height:116px;
+object-fit:cover;
+border-radius:24px;
+margin-top:-58px;
+border:3px solid rgba(76,201,240,.85);
+box-shadow:0 12px 30px rgba(76,201,240,.45);
 }
 
-/* STATS */
-
 .stats{
-
 display:flex;
 flex-wrap:wrap;
 justify-content:center;
-gap:10px;
-margin-top:10px;
-
+gap:12px;
+margin-top:14px;
 }
 
 .stat{
-
-padding:8px 12px;
-background:rgba(0,0,0,.4);
-border-radius:6px;
+padding:10px 14px;
+background:rgba(6,11,26,.6);
+border:1px solid rgba(255,255,255,.12);
+border-radius:10px;
 font-size:13px;
-
+letter-spacing:.4px;
 }
 
-/* GRID ITEMS */
-
 .grid{
-
 display:grid;
-grid-template-columns:repeat(auto-fill,60px);
-gap:10px;
+grid-template-columns:repeat(auto-fill,minmax(72px,1fr));
+gap:12px;
 justify-content:center;
-margin-top:10px;
-
+margin-top:12px;
 }
 
 .grid img{
-
-width:60px;
-border-radius:6px;
+width:100%;
+aspect-ratio:1/1;
+object-fit:cover;
+border-radius:12px;
 transition:.3s;
 cursor:pointer;
-
+border:1px solid rgba(255,255,255,.15);
+box-shadow:0 10px 22px rgba(0,0,0,.3);
 }
 
 .grid img:hover{
-
-transform:scale(1.2) rotateY(10deg);
-box-shadow:0 0 10px cyan;
-
+transform:translateY(-3px) scale(1.05);
+box-shadow:0 12px 24px rgba(76,201,240,.4);
 }
 
-/* POPUP */
-
 .popup{
-
 position:fixed;
 top:0;
 left:0;
 width:100%;
 height:100%;
-background:rgba(0,0,0,.7);
+background:rgba(1,3,10,.82);
 display:none;
 align-items:center;
 justify-content:center;
-
+padding:20px;
+z-index:50;
 }
 
 .popup img{
-
-width:200px;
-
+max-width:min(440px,90vw);
+border-radius:18px;
+border:1px solid rgba(255,255,255,.2);
+box-shadow:0 25px 45px rgba(0,0,0,.45);
 }
 
-/* LOADING */
-
 .loading{
-
 text-align:center;
-margin-top:40px;
-
+margin-top:50px;
 }
 
 .spinner{
-
 width:40px;
 height:40px;
-border:4px solid #222;
-border-top:4px solid cyan;
+border:4px solid rgba(255,255,255,.14);
+border-top:4px solid var(--primary);
 border-radius:50%;
 animation:spin 1s linear infinite;
 margin:auto;
-
 }
 
-@keyframes spin{
+h3{
+margin:0 0 10px;
+font-size:18px;
+letter-spacing:.6px;
+color:#d8e7ff;
+}
 
+p{color:#ced8ef}
+
+#result{padding:0 16px 30px}
+
+@keyframes spin{
 0%{transform:rotate(0)}
 100%{transform:rotate(360deg)}
+}
 
+@media (max-width:700px){
+.card{padding:18px}
+.banner{height:170px}
+.avatar{width:98px;height:98px;margin-top:-50px}
 }
 
 </style>
@@ -229,6 +273,7 @@ margin:auto;
 <canvas id="particles"></canvas>
 
 <header>FREE FIRE CYBER PROFILE</header>
+<p class="subtitle">Modern Player Dashboard • Glassmorphism Edition</p>
 
 <div class="search">
 

@@ -796,22 +796,37 @@ async function check(){
     const weapons    = await loadMany(weaponIds);
     const outfits    = await loadMany(outfitIds);
 
-    // outfit parts
-    // index: 0=mata, 1=sepatu, 2=rambut, 3=masker, 4=baju, 5=celana
-    const mata   = outfits[0] || "";
-    const sepatu = outfits[1] || "";
-    const rambut = outfits[2] || "";
-    const masker = outfits[3] || "";
-    const baju   = outfits[4] || "";
-    const celana = outfits[5] || "";
+    // ─── Classify each outfit URL by keywords in filename ───
+    function classifyOutfit(url){
+      if(!url) return "lainnya";
+      const u = url.toLowerCase();
+      // urutan penting: lebih spesifik duluan
+      if(u.includes("headadditive") || u.includes("head_additive")) return "mata";
+      if(u.includes("hair"))         return "rambut";
+      if(u.includes("shoe"))         return "sepatu";
+      if(u.includes("bottom"))       return "celana";
+      if(u.includes("_top_") || u.includes("_top.") || u.includes("top_cos") || u.includes("cos_top")) return "baju";
+      if(u.includes("mask") || u.includes("face"))   return "masker";
+      if(u.includes("head"))         return "masker";  // helmet/kepala generic
+      return "lainnya";
+    }
+
+    // Bangun slot map dari semua outfit URL
+    const slots = { rambut:"", mata:"", masker:"", baju:"", celana:"", sepatu:"", lainnya:[] };
+    for(const url of outfits){
+      if(!url) continue;
+      const type = classifyOutfit(url);
+      if(type === "lainnya") slots.lainnya.push(url);
+      else slots[type] = slots[type] || url; // ambil yg pertama per slot
+    }
 
     const outfitParts = [
-      {label:"Mata",   img: mata},
-      {label:"Sepatu", img: sepatu},
-      {label:"Rambut", img: rambut},
-      {label:"Masker", img: masker},
-      {label:"Baju",   img: baju},
-      {label:"Celana", img: celana},
+      {label:"Rambut", slot:"rambut", img: slots.rambut},
+      {label:"Mata",   slot:"mata",   img: slots.mata},
+      {label:"Masker", slot:"masker", img: slots.masker},
+      {label:"Baju",   slot:"baju",   img: slots.baju},
+      {label:"Celana", slot:"celana", img: slots.celana},
+      {label:"Sepatu", slot:"sepatu", img: slots.sepatu},
     ];
 
     // weapon grid html
@@ -830,8 +845,8 @@ async function check(){
         </div>
       </div>`).join("");
 
-    // head layers: rambut (base) → mata → masker (top)
-    const headLayers = [rambut, mata, masker].map((src,i) => src
+    // head layers: rambut (base) → mata → masker (top) — semua transparan menyatu
+    const headLayers = [slots.rambut, slots.mata, slots.masker].map(src => src
       ? `<div class="layer"><img src="${src}" onerror="this.style.opacity='.1'"></div>`
       : ""
     ).join("");
@@ -893,23 +908,23 @@ async function check(){
               <!-- SHIRT -->
               <div class="outfit-slot slot-shirt">
                 <span class="slot-label label-shirt">Baju</span>
-                ${baju ? `<img src="${baju}" style="width:100%;height:100%;object-fit:cover" onerror="this.style.opacity='.2'">` : ""}
+                ${slots.baju ? `<img src="${slots.baju}" style="width:100%;height:100%;object-fit:cover" onerror="this.style.opacity='.2'">` : ""}
               </div>
 
               <!-- PANTS -->
               <div class="outfit-slot slot-pants">
                 <span class="slot-label label-pants">Celana</span>
-                ${celana ? `<img src="${celana}" style="width:100%;height:100%;object-fit:cover" onerror="this.style.opacity='.2'">` : ""}
+                ${slots.celana ? `<img src="${slots.celana}" style="width:100%;height:100%;object-fit:cover" onerror="this.style.opacity='.2'">` : ""}
               </div>
 
               <!-- SHOES -->
               <div class="outfit-slot slot-shoes-left">
                 <span class="slot-label label-shoe-l">Sepatu</span>
-                ${sepatu ? `<img src="${sepatu}" style="width:100%;height:100%;object-fit:cover" onerror="this.style.opacity='.2'">` : ""}
+                ${slots.sepatu ? `<img src="${slots.sepatu}" style="width:100%;height:100%;object-fit:cover" onerror="this.style.opacity='.2'">` : ""}
               </div>
               <div class="outfit-slot slot-shoes-right">
                 <span class="slot-label label-shoe-r">Sepatu</span>
-                ${sepatu ? `<img src="${sepatu}" style="width:100%;height:100%;object-fit:cover" onerror="this.style.opacity='.2'">` : ""}
+                ${slots.sepatu ? `<img src="${slots.sepatu}" style="width:100%;height:100%;object-fit:cover" onerror="this.style.opacity='.2'">` : ""}
               </div>
 
             </div>

@@ -1,0 +1,430 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="UTF-8">
+<title>FF Cyberpunk Profile</title>
+
+<style>
+
+body{
+margin:0;
+font-family:Orbitron,Arial;
+color:white;
+background:#020617;
+overflow-x:hidden;
+}
+
+/* PARTICLE BACKGROUND */
+
+#particles{
+position:fixed;
+top:0;
+left:0;
+width:100%;
+height:100%;
+z-index:-1;
+}
+
+/* HEADER */
+
+header{
+text-align:center;
+padding:20px;
+font-size:28px;
+letter-spacing:2px;
+background:linear-gradient(90deg,#00f5ff,#ff00c8);
+-webkit-background-clip:text;
+-webkit-text-fill-color:transparent;
+}
+
+/* SEARCH */
+
+.search{
+text-align:center;
+margin:20px;
+}
+
+input{
+padding:12px;
+border-radius:8px;
+border:none;
+background:rgba(255,255,255,.08);
+color:white;
+backdrop-filter:blur(10px);
+}
+
+button{
+padding:12px 20px;
+border:none;
+border-radius:8px;
+background:linear-gradient(90deg,#00f5ff,#ff00c8);
+color:white;
+cursor:pointer;
+}
+
+/* GLASS CARD */
+
+.card{
+
+background:rgba(255,255,255,.05);
+backdrop-filter:blur(15px);
+border-radius:12px;
+padding:20px;
+margin:20px auto;
+max-width:900px;
+border:1px solid rgba(255,255,255,.1);
+position:relative;
+transition:.3s;
+}
+
+/* RGB BORDER */
+
+.card:before{
+
+content:"";
+position:absolute;
+top:-2px;
+left:-2px;
+right:-2px;
+bottom:-2px;
+background:linear-gradient(45deg,#00f5ff,#ff00c8,#00f5ff);
+z-index:-1;
+filter:blur(10px);
+opacity:.4;
+border-radius:14px;
+
+}
+
+/* PROFILE HEADER */
+
+.profile{
+
+text-align:center;
+
+}
+
+.banner{
+
+width:100%;
+border-radius:10px;
+opacity:.8;
+
+}
+
+.avatar{
+
+width:100px;
+border-radius:14px;
+margin-top:-50px;
+border:3px solid cyan;
+box-shadow:0 0 10px cyan;
+
+}
+
+/* STATS */
+
+.stats{
+
+display:flex;
+flex-wrap:wrap;
+justify-content:center;
+gap:10px;
+margin-top:10px;
+
+}
+
+.stat{
+
+padding:8px 12px;
+background:rgba(0,0,0,.4);
+border-radius:6px;
+font-size:13px;
+
+}
+
+/* GRID ITEMS */
+
+.grid{
+
+display:grid;
+grid-template-columns:repeat(auto-fill,60px);
+gap:10px;
+justify-content:center;
+margin-top:10px;
+
+}
+
+.grid img{
+
+width:60px;
+border-radius:6px;
+transition:.3s;
+cursor:pointer;
+
+}
+
+.grid img:hover{
+
+transform:scale(1.2) rotateY(10deg);
+box-shadow:0 0 10px cyan;
+
+}
+
+/* POPUP */
+
+.popup{
+
+position:fixed;
+top:0;
+left:0;
+width:100%;
+height:100%;
+background:rgba(0,0,0,.7);
+display:none;
+align-items:center;
+justify-content:center;
+
+}
+
+.popup img{
+
+width:200px;
+
+}
+
+/* LOADING */
+
+.loading{
+
+text-align:center;
+margin-top:40px;
+
+}
+
+.spinner{
+
+width:40px;
+height:40px;
+border:4px solid #222;
+border-top:4px solid cyan;
+border-radius:50%;
+animation:spin 1s linear infinite;
+margin:auto;
+
+}
+
+@keyframes spin{
+
+0%{transform:rotate(0)}
+100%{transform:rotate(360deg)}
+
+}
+
+</style>
+
+</head>
+
+<body>
+
+<canvas id="particles"></canvas>
+
+<header>FREE FIRE CYBER PROFILE</header>
+
+<div class="search">
+
+<input id="uid" placeholder="Enter UID">
+<button onclick="check()">Search</button>
+
+</div>
+
+<div id="result"></div>
+
+<div class="popup" id="popup" onclick="closePopup()">
+
+<img id="popupImg">
+
+</div>
+
+<script>
+
+const playerAPI="https://ff.cocspedsafliz.workers.dev/uid?uid="
+const assetAPI="https://ff.cocspedsafliz.workers.dev/lookup?id="
+
+async function asset(id){
+
+if(!id)return ""
+
+try{
+
+let r=await fetch(assetAPI+id)
+let j=await r.json()
+return j.image
+
+}catch{return ""}
+
+}
+
+async function load(list){
+
+return Promise.all(list.map(asset))
+
+}
+
+function inspect(src){
+
+document.getElementById("popupImg").src=src
+document.getElementById("popup").style.display="flex"
+
+}
+
+function closePopup(){
+
+document.getElementById("popup").style.display="none"
+
+}
+
+async function check(){
+
+let uid=document.getElementById("uid").value
+
+document.getElementById("result").innerHTML=
+'<div class="loading"><div class="spinner"></div></div>'
+
+try{
+
+let res=await fetch(playerAPI+uid)
+let data=await res.json()
+let r=data.result
+
+let avatar=await asset(r.equipped_avatar_id)
+let banner=await asset(r.equipped_banner_id)
+let pet=await asset(r.pet_id)
+
+let weaponList=JSON.parse(r.equipped_weapon||"[]")
+let outfitList=JSON.parse(r.equipped_outfit||"[]")
+
+let weapons=await load(weaponList)
+let outfits=await load(outfitList)
+
+let weaponHTML=weapons.map(i=>`<img src="${i}" onclick="inspect('${i}')">`).join("")
+let outfitHTML=outfits.map(i=>`<img src="${i}" onclick="inspect('${i}')">`).join("")
+
+document.getElementById("result").innerHTML=`
+
+<div class="card profile">
+
+<img class="banner" src="${banner}">
+
+<img class="avatar" src="${avatar}">
+
+<h2>${r.name}</h2>
+
+<div class="stats">
+
+<div class="stat">UID ${r.uid}</div>
+<div class="stat">Level ${r.level}</div>
+<div class="stat">Likes ${r.likes}</div>
+<div class="stat">BR ${r.br_rank_point}</div>
+<div class="stat">CS ${r.cs_rank_point}</div>
+
+</div>
+
+</div>
+
+<div class="card">
+
+<h3>Pet</h3>
+
+<img src="${pet}" width="90">
+
+</div>
+
+<div class="card">
+
+<h3>Weapon Showcase</h3>
+
+<div class="grid">
+
+${weaponHTML}
+
+</div>
+
+</div>
+
+<div class="card">
+
+<h3>Outfit</h3>
+
+<div class="grid">
+
+${outfitHTML}
+
+</div>
+
+</div>
+
+<div class="card">
+
+<h3>Guild</h3>
+
+<p>${r.guild_name||"-"}</p>
+<p>Leader: ${r.guild_leader_name||"-"}</p>
+
+</div>
+
+`
+
+}catch{
+
+document.getElementById("result").innerHTML="Error loading UID"
+
+}
+
+}
+
+/* PARTICLES */
+
+const canvas=document.getElementById("particles")
+const ctx=canvas.getContext("2d")
+
+canvas.width=window.innerWidth
+canvas.height=window.innerHeight
+
+let p=[]
+
+for(let i=0;i<80;i++){
+
+p.push({
+x:Math.random()*canvas.width,
+y:Math.random()*canvas.height,
+r:Math.random()*2
+})
+
+}
+
+function draw(){
+
+ctx.clearRect(0,0,canvas.width,canvas.height)
+
+ctx.fillStyle="rgba(0,255,255,.5)"
+
+p.forEach(i=>{
+ctx.beginPath()
+ctx.arc(i.x,i.y,i.r,0,Math.PI*2)
+ctx.fill()
+
+i.y+=.3
+if(i.y>canvas.height)i.y=0
+
+})
+
+requestAnimationFrame(draw)
+
+}
+
+draw()
+
+</script>
+
+</body>
+</html>

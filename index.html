@@ -828,24 +828,72 @@ function loadImg(src){
   });
 }
 
-// ─── Gabungkan outfit jadi 1 blob canvas ───
+// ─── Gabungkan outfit jadi collage grid biar AI lihat setiap bagian jelas ───
 async function buildOutfitCanvas(slots){
-  const SIZE = 512;
+  // Layout 3 kolom x 2 baris = 6 slot
+  const COLS = 3, ROWS = 2;
+  const CELL = 256;          // ukuran tiap sel
+  const PAD  = 10;           // padding dalam sel
+  const LABEL_H = 28;        // tinggi label teks
+  const W = COLS * CELL;
+  const H = ROWS * (CELL + LABEL_H);
+
   const canvas = document.createElement("canvas");
-  canvas.width  = SIZE;
-  canvas.height = SIZE;
+  canvas.width  = W;
+  canvas.height = H;
   const ctx = canvas.getContext("2d");
 
-  // Urutan layer: baju → celana → sepatu → rambut → mata → masker
-  const layerOrder = ["baju","celana","sepatu","rambut","mata","masker"];
+  // Background gelap bersih
+  ctx.fillStyle = "#111114";
+  ctx.fillRect(0, 0, W, H);
 
-  for(const key of layerOrder){
+  // Urutan slot di grid (kiri-atas ke kanan-bawah)
+  const order = [
+    { key:"rambut", label:"Hair"   },
+    { key:"mata",   label:"Eyes"   },
+    { key:"masker", label:"Mask"   },
+    { key:"baju",   label:"Top"    },
+    { key:"celana", label:"Bottom" },
+    { key:"sepatu", label:"Shoes"  },
+  ];
+
+  for(let i = 0; i < order.length; i++){
+    const { key, label } = order[i];
+    const col = i % COLS;
+    const row = Math.floor(i / COLS);
+    const x = col * CELL;
+    const y = row * (CELL + LABEL_H);
+
+    // Cell border
+    ctx.strokeStyle = "#2e2e38";
+    ctx.lineWidth = 1;
+    ctx.strokeRect(x + .5, y + .5, CELL - 1, CELL + LABEL_H - 1);
+
+    // Label teks
+    ctx.fillStyle = "#f5a623";
+    ctx.font = "bold 13px Inter, sans-serif";
+    ctx.textAlign = "center";
+    ctx.fillText(label, x + CELL / 2, y + LABEL_H - 8);
+
+    // Gambar outfit
     const src = slots[key];
-    if(!src) continue;
-    try{
-      const img = await loadImg(src);
-      ctx.drawImage(img, 0, 0, SIZE, SIZE);
-    }catch(e){ console.warn("Skip layer", key, e.message); }
+    if(src){
+      try{
+        const img = await loadImg(src);
+        const imgX = x + PAD;
+        const imgY = y + LABEL_H;
+        const imgW = CELL - PAD * 2;
+        const imgH = CELL - PAD * 2;
+        ctx.drawImage(img, imgX, imgY, imgW, imgH);
+      }catch(e){ console.warn("Skip", key, e.message); }
+    } else {
+      // Slot kosong
+      ctx.fillStyle = "#1e1e24";
+      ctx.fillRect(x + 1, y + LABEL_H, CELL - 2, CELL - 2);
+      ctx.fillStyle = "#3a3a4a";
+      ctx.font = "12px Inter, sans-serif";
+      ctx.fillText("–", x + CELL / 2, y + LABEL_H + CELL / 2);
+    }
   }
 
   return new Promise(res => canvas.toBlob(res, "image/png"));
@@ -883,7 +931,7 @@ async function generateCharacter(){
     // Step 2: upload ke API
     const fd = new FormData();
     fd.append("image", blob, "outfit.png");
-    fd.append("param", "satukan jadi karakter game free fire rapi anime 4K");
+    fd.append("param", "Generate a full body Free Fire game character in high quality anime style. STRICTLY follow all outfit details from the reference image: preserve the exact hair style and color (hair must be fully visible and naturally attached to the head, NOT bald), preserve the exact eye and face accessory design, preserve the exact top/shirt design and colors without any changes, preserve the exact pants/bottom design and colors, preserve the exact shoes design. Show the COMPLETE full body from head to toe in a single frame. Do NOT cut off or crop the body. Do NOT change any clothing design, color, or pattern. Render with clean anime shading, 4K resolution, dark minimalist background.");
 
     const resp = await fetch("https://api.nexray.web.id/ai/gptimage", {
       method: "POST",

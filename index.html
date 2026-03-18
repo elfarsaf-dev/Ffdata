@@ -681,6 +681,80 @@ line-height:1;
 
 .popup-close:hover{color:var(--gold)}
 
+/* ─── AI GENERATE ─── */
+.gen-btn{
+display:flex;
+align-items:center;
+justify-content:center;
+gap:10px;
+width:100%;
+margin-top:22px;
+padding:15px 24px;
+background:linear-gradient(135deg,#1a1a22,#28242e);
+border:1px solid var(--gold);
+border-radius:12px;
+color:var(--gold);
+font-family:"Space Grotesk",sans-serif;
+font-size:14px;
+font-weight:700;
+letter-spacing:.6px;
+cursor:pointer;
+transition:.25s;
+}
+
+.gen-btn:hover{
+background:linear-gradient(135deg,var(--gold),#e6920f);
+color:#0d0d0f;
+box-shadow:0 0 28px rgba(245,166,35,.35);
+transform:translateY(-2px);
+}
+
+.gen-btn:disabled{
+opacity:.5;
+cursor:not-allowed;
+transform:none;
+}
+
+.gen-btn .spin{
+display:inline-block;
+width:16px;
+height:16px;
+border:2px solid currentColor;
+border-top-color:transparent;
+border-radius:50%;
+animation:spin .7s linear infinite;
+}
+
+.ai-result-card{
+background:var(--surface);
+border:1px solid var(--border);
+border-radius:18px;
+padding:24px;
+margin-bottom:20px;
+text-align:center;
+}
+
+.ai-result-card .ai-img{
+width:100%;
+max-width:400px;
+border-radius:14px;
+border:1px solid var(--border);
+box-shadow:0 20px 50px rgba(0,0,0,.5);
+cursor:pointer;
+transition:.2s;
+}
+
+.ai-result-card .ai-img:hover{
+transform:scale(1.02);
+box-shadow:0 24px 60px rgba(245,166,35,.2);
+}
+
+.ai-err{
+color:var(--red);
+font-size:13px;
+margin-top:12px;
+}
+
 /* ─── ERROR ─── */
 .error-box{
 text-align:center;
@@ -740,6 +814,121 @@ color:var(--muted);
 
 const PLAYER = "https://ff.cocspedsafliz.workers.dev/uid?uid=";
 const ASSET  = "https://ff.cocspedsafliz.workers.dev/lookup?id=";
+
+let _currentSlots = {};
+
+// ─── Load satu gambar ke Image element ───
+function loadImg(src){
+  return new Promise((res, rej) => {
+    const img = new Image();
+    img.crossOrigin = "anonymous";
+    img.onload  = () => res(img);
+    img.onerror = () => rej(new Error("Gagal load: " + src));
+    img.src = src;
+  });
+}
+
+// ─── Gabungkan outfit jadi 1 blob canvas ───
+async function buildOutfitCanvas(slots){
+  const SIZE = 512;
+  const canvas = document.createElement("canvas");
+  canvas.width  = SIZE;
+  canvas.height = SIZE;
+  const ctx = canvas.getContext("2d");
+
+  // Urutan layer: baju → celana → sepatu → rambut → mata → masker
+  const layerOrder = ["baju","celana","sepatu","rambut","mata","masker"];
+
+  for(const key of layerOrder){
+    const src = slots[key];
+    if(!src) continue;
+    try{
+      const img = await loadImg(src);
+      ctx.drawImage(img, 0, 0, SIZE, SIZE);
+    }catch(e){ console.warn("Skip layer", key, e.message); }
+  }
+
+  return new Promise(res => canvas.toBlob(res, "image/png"));
+}
+
+// ─── Upload ke API dan tampilkan hasil ───
+async function generateCharacter(){
+  const btn     = document.getElementById("genBtn");
+  const aiArea  = document.getElementById("ai-result");
+  if(!btn || !aiArea) return;
+
+  // Cek minimal ada 1 slot terisi
+  const hasAny = Object.values(_currentSlots).some(v => typeof v === "string" && v);
+  if(!hasAny){
+    aiArea.innerHTML = `<div class="ai-result-card"><p class="ai-err">Tidak ada outfit yang terdeteksi.</p></div>`;
+    return;
+  }
+
+  btn.disabled = true;
+  btn.innerHTML = `<span class="spin"></span> Generating...`;
+  aiArea.innerHTML = `
+    <div class="ai-result-card">
+      <div class="loading-wrap" style="padding:30px 0">
+        <div class="ring"></div>
+        <span>Menyatukan outfit ke canvas...</span>
+      </div>
+    </div>`;
+
+  try{
+    // Step 1: gabung outfit jadi satu blob
+    const blob = await buildOutfitCanvas(_currentSlots);
+
+    aiArea.querySelector("span").textContent = "Mengirim ke AI... (bisa 20-40 detik)";
+
+    // Step 2: upload ke API
+    const fd = new FormData();
+    fd.append("image", blob, "outfit.png");
+    fd.append("param", "satukan jadi karakter game free fire rapi anime 4K");
+
+    const resp = await fetch("https://api.nexray.web.id/ai/gptimage", {
+      method: "POST",
+      body: fd
+    });
+
+    if(!resp.ok) throw new Error("API error: " + resp.status);
+
+    const ct = resp.headers.get("content-type") || "";
+    let resultSrc = "";
+
+    if(ct.includes("image/")){
+      // API langsung return gambar
+      const imgBlob = await resp.blob();
+      resultSrc = URL.createObjectURL(imgBlob);
+    } else {
+      // API return JSON dengan URL / base64
+      const json = await resp.json();
+      resultSrc = json.url || json.image || json.result || "";
+      if(!resultSrc) throw new Error("Respons API tidak berisi gambar.");
+    }
+
+    aiArea.innerHTML = `
+      <div class="ai-result-card">
+        <div class="section-title">AI Character Generated</div>
+        <img class="ai-img" src="${resultSrc}"
+          onclick="inspect('${resultSrc}')"
+          onerror="this.parentElement.innerHTML+='<p class=\\'ai-err\\'>Gambar gagal dimuat.</p>'">
+        <p style="font-size:12px;color:var(--muted);margin-top:14px">
+          Klik gambar untuk memperbesar • Dibuat oleh AI dari outfit yang dipakai
+        </p>
+      </div>`;
+
+  }catch(err){
+    console.error(err);
+    aiArea.innerHTML = `
+      <div class="ai-result-card">
+        <p class="ai-err">⚠ Gagal generate: ${err.message}</p>
+        <p style="font-size:12px;color:var(--muted);margin-top:8px">Coba lagi beberapa saat.</p>
+      </div>`;
+  }finally{
+    btn.disabled = false;
+    btn.innerHTML = "✦ Generate AI Character";
+  }
+}
 
 async function fetchAsset(id){
   if(!id) return "";
@@ -819,6 +1008,7 @@ async function check(){
       if(type === "lainnya") slots.lainnya.push(url);
       else slots[type] = slots[type] || url; // ambil yg pertama per slot
     }
+    _currentSlots = slots; // simpan global buat generateCharacter()
 
     const outfitParts = [
       {label:"Rambut", slot:"rambut", img: slots.rambut},
@@ -933,10 +1123,16 @@ async function check(){
           <!-- Legend -->
           <div class="outfit-legend">
             ${legendHTML}
+            <button class="gen-btn" id="genBtn" onclick="generateCharacter()">
+              ✦ Generate AI Character
+            </button>
           </div>
 
         </div>
       </div>
+
+      <!-- AI RESULT (muncul setelah generate) -->
+      <div id="ai-result"></div>
 
       <!-- WEAPONS -->
       ${weaponHTML ? `

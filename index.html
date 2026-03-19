@@ -658,9 +658,10 @@ color:var(--muted);
 const PLAYER = "https://ff.cocspedsafliz.workers.dev/uid?uid=";
 const ASSET  = "https://ff.cocspedsafliz.workers.dev/lookup?id=";
 
-let _allOutfits = [];   // semua URL outfit mentah dari API
-let _allWeapons = [];   // semua URL senjata mentah dari API
+let _allOutfits = [];
+let _allWeapons = [];
 let _playerName = "";
+let _avatarUrl  = "";   // avatar karakter dari API
 
 // ─── Load satu gambar ke Image element ───
 function loadImg(src){
@@ -688,95 +689,49 @@ function loadFile(file){
   });
 }
 
-// ─── Build canvas: profile (atas) + semua outfit + senjata (bawah) ───
-async function buildOutfitCanvas(outfits, weapons, profileFile){
-  const CELL    = 120;   // ukuran tiap item
-  const PAD     = 6;
-  const LABEL_H = 20;
-  const COLS    = 6;     // 6 item per baris
-
-  // Semua item: outfit dulu, lalu senjata
-  const items = [
-    ...outfits.map(u => ({url:u, label:"Outfit"})),
-    ...weapons.map(u => ({url:u, label:"Weapon"})),
-  ].filter(i => i.url);
-
-  const rows   = Math.ceil(items.length / COLS) || 1;
-  const GRID_W = COLS * CELL;
-  const GRID_H = rows * (CELL + LABEL_H);
-
-  // Profile: lebar penuh GRID_W, tinggi proporsional
-  const PROF_H = profileFile ? Math.round(GRID_W * 0.56) : 0; // ~16:9
-
+// ─── Build canvas: prioritas foto profil → avatar karakter ───
+// Kirim 1 gambar bersih ke AI sebagai referensi karakter
+async function buildOutfitCanvas(avatarUrl, profileFile){
+  const W = 720, H = 720;
   const canvas = document.createElement("canvas");
-  canvas.width  = GRID_W;
-  canvas.height = PROF_H + GRID_H;
+  canvas.width  = W;
+  canvas.height = H;
   const ctx = canvas.getContext("2d");
 
   ctx.fillStyle = "#0d0d0f";
-  ctx.fillRect(0, 0, canvas.width, canvas.height);
+  ctx.fillRect(0, 0, W, H);
 
-  // ── Baris atas: foto profil ──
+  // Prioritas 1: foto profil yang diupload user
   if(profileFile){
     try{
-      const profImg = await loadFile(profileFile);
-      // cover fit
-      const scale = Math.max(GRID_W / profImg.width, PROF_H / profImg.height);
-      const dw = profImg.width  * scale;
-      const dh = profImg.height * scale;
-      const dx = (GRID_W - dw) / 2;
-      const dy = (PROF_H - dh) / 2;
+      const img = await loadFile(profileFile);
+      // cover-fit supaya memenuhi canvas
+      const scale = Math.max(W / img.width, H / img.height);
+      const dw = img.width  * scale;
+      const dh = img.height * scale;
       ctx.save();
-      ctx.rect(0, 0, GRID_W, PROF_H);
-      ctx.clip();
-      ctx.drawImage(profImg, dx, dy, dw, dh);
-      ctx.restore();
-
-      // strip label
-      ctx.fillStyle = "rgba(0,0,0,.5)";
-      ctx.fillRect(0, 0, GRID_W, 24);
-      ctx.fillStyle = "#f5a623";
-      ctx.font = "bold 11px Inter,sans-serif";
-      ctx.textAlign = "center";
-      ctx.fillText("PROFILE SCREENSHOT", GRID_W / 2, 15);
-
-      // separator
-      ctx.strokeStyle = "#2e2e38";
-      ctx.lineWidth = 1;
       ctx.beginPath();
-      ctx.moveTo(0, PROF_H);
-      ctx.lineTo(GRID_W, PROF_H);
-      ctx.stroke();
-    }catch(e){ console.warn("Profile err", e); }
+      ctx.rect(0, 0, W, H);
+      ctx.clip();
+      ctx.drawImage(img, (W - dw) / 2, (H - dh) / 2, dw, dh);
+      ctx.restore();
+      return new Promise(res => canvas.toBlob(res, "image/png"));
+    }catch(e){ console.warn("Profile load err", e); }
   }
 
-  // ── Baris bawah: semua item grid ──
-  for(let i = 0; i < items.length; i++){
-    const col = i % COLS;
-    const row = Math.floor(i / COLS);
-    const x   = col * CELL;
-    const y   = PROF_H + row * (CELL + LABEL_H);
-
-    // Cell
-    ctx.fillStyle = "#18181c";
-    ctx.fillRect(x, y, CELL, CELL + LABEL_H);
-    ctx.strokeStyle = "#2e2e38";
-    ctx.lineWidth = 1;
-    ctx.strokeRect(x + .5, y + .5, CELL - 1, CELL + LABEL_H - 1);
-
-    // Label
-    ctx.fillStyle = items[i].label === "Weapon" ? "#60a5fa" : "#f5a623";
-    ctx.font = "bold 9px Inter,sans-serif";
-    ctx.textAlign = "center";
-    ctx.fillText(items[i].label + " " + (i + 1), x + CELL / 2, y + LABEL_H - 5);
-
-    // Gambar
+  // Prioritas 2: avatar karakter dari API
+  if(avatarUrl){
     try{
-      const img = await loadImg(items[i].url);
-      ctx.drawImage(img, x + PAD, y + LABEL_H, CELL - PAD * 2, CELL - PAD * 2);
-    }catch(e){ console.warn("Skip item", i, e.message); }
+      const img = await loadImg(avatarUrl);
+      const scale = Math.min(W / img.width, H / img.height);
+      const dw = img.width  * scale;
+      const dh = img.height * scale;
+      ctx.drawImage(img, (W - dw) / 2, (H - dh) / 2, dw, dh);
+      return new Promise(res => canvas.toBlob(res, "image/png"));
+    }catch(e){ console.warn("Avatar load err", e); }
   }
 
+  // Fallback: canvas kosong hitam
   return new Promise(res => canvas.toBlob(res, "image/png"));
 }
 
@@ -806,27 +761,26 @@ async function generateCharacter(){
     </div>`;
 
   try{
-    const blob = await buildOutfitCanvas(_allOutfits, _allWeapons, profileFile);
+    const blob = await buildOutfitCanvas(_avatarUrl, profileFile);
 
     const span = aiArea.querySelector("span");
     if(span) span.textContent = "Mengirim ke AI... (bisa 30-60 detik)";
 
-    const profileNote = profileFile
-      ? `The left half of the reference image is the player's in-game profile screenshot — use it clearly as the background of the poster, keep all text and icons readable.`
-      : ``;
+    const usingProfile = !!(profileFile);
 
-    const prompt = `Create a cinematic digital poster for a Free Fire game player named "${nickname}".
-
-POSTER LAYOUT:
-- BACKGROUND: ${profileFile
-    ? "Use the profile screenshot (left side of reference image) clearly displayed behind everything — do NOT blur or cover it, all details like icon, name, stats, textures must remain fully readable."
-    : "A dramatic dark background with glowing embers and cinematic lighting."}
-- FOREGROUND: A stylized anime/game-art character (NOT photorealistic) sitting on a throne, one hand resting on the armrest, the other holding a weapon, looking down with disdain.
-- CHARACTER OUTFIT: Strictly use all outfit pieces shown in the right-side grid of the reference image: exact hair style and color (fully attached to head, NOT bald), exact eye/face accessories, exact top/jacket colors and design unchanged, exact bottom/pants colors and design unchanged, exact shoes.
-- TEXT OVERLAY: At the center of the poster, add bold glowing 3D text that reads "${nickname}" — use a golden-red spread effect with gold and silver star particles dripping from the letters.
-- EFFECTS: Dramatic rain falling, floating light pearls/orbs, cinematic volumetric lighting, soft shadows highlighting the character and background. Character and background must NOT overlap confusingly — keep both clearly distinct.
-
-STYLE: High-quality anime game-art / digital painting style (NOT realistic / NOT photographic). Think Free Fire official art. 4K resolution, vivid colors.`;
+    const prompt = usingProfile
+      ? `You are given a Free Fire in-game profile screenshot. Create a stunning cinematic poster from it:
+1. BACKGROUND: Display the profile screenshot clearly and fully behind everything — every stat, icon, name, and texture must stay readable. Do NOT blur or crop it.
+2. FOREGROUND: Extract or recreate the character visible in the profile screenshot as a stylized Free Fire anime art full-body figure, sitting on a golden throne, holding a weapon, looking down with disdain. The character must wear EXACTLY the same outfit as shown in the profile (same colors, same style).
+3. TEXT: Place bold glowing 3D text "${nickname}" at the top-center — gold-red gradient with silver star particles dripping from the letters.
+4. EFFECTS: Dramatic rain streaks, soft volumetric golden light from above, floating glowing orbs/pearls. Keep the character and background clearly separated (no visual confusion).
+STYLE: Free Fire official cinematic anime art, NOT photorealistic. 4K, vivid, professional.`
+      : `You are given a Free Fire player character avatar/icon. Create a cinematic poster:
+1. FOREGROUND: Recreate this character as a FULL BODY (head to toe) anime game-art figure in a heroic standing or throne-sitting pose, holding a weapon. Preserve ALL outfit details from the reference image — same hair, face, outfit colors and style exactly.
+2. BACKGROUND: Dark dramatic scene — cracked stone throne room, dramatic lighting, glowing embers, cinematic atmosphere.
+3. TEXT: Bold glowing 3D text "${nickname}" at the top — gold-red color with silver particle stars dripping down.
+4. EFFECTS: Rain streaks, volumetric light beams, floating glowing orbs.
+STYLE: Free Fire official cinematic anime art style, NOT photorealistic. Full body visible. 4K quality.`;
 
     const fd = new FormData();
     fd.append("image", blob, "reference.png");
@@ -934,6 +888,7 @@ async function check(){
     _allOutfits = outfits.filter(Boolean);
     _allWeapons = weapons.filter(Boolean);
     _playerName = p.name || "";
+    _avatarUrl  = avatar || "";
 
     // Grid semua outfit (raw)
     const outfitGridHTML = _allOutfits.map((url, i) =>

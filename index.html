@@ -755,6 +755,60 @@ font-size:13px;
 margin-top:12px;
 }
 
+/* ─── UPLOAD AREA ─── */
+.upload-area{
+margin-top:16px;
+border:1.5px dashed var(--border);
+border-radius:12px;
+padding:14px 16px;
+cursor:pointer;
+transition:.2s;
+text-align:center;
+background:var(--bg);
+}
+
+.upload-area:hover{
+border-color:var(--gold);
+background:rgba(245,166,35,.05);
+}
+
+.upload-area input[type=file]{
+display:none;
+}
+
+.upload-label{
+display:flex;
+flex-direction:column;
+align-items:center;
+gap:6px;
+cursor:pointer;
+}
+
+.upload-icon{
+font-size:22px;
+}
+
+.upload-label span{
+font-size:12px;
+color:var(--muted);
+line-height:1.4;
+}
+
+.upload-label strong{
+font-size:13px;
+color:var(--text);
+}
+
+.upload-preview{
+width:100%;
+border-radius:8px;
+margin-top:10px;
+max-height:100px;
+object-fit:cover;
+border:1px solid var(--border);
+display:none;
+}
+
 /* ─── ERROR ─── */
 .error-box{
 text-align:center;
@@ -816,6 +870,7 @@ const PLAYER = "https://ff.cocspedsafliz.workers.dev/uid?uid=";
 const ASSET  = "https://ff.cocspedsafliz.workers.dev/lookup?id=";
 
 let _currentSlots = {};
+let _playerName   = "";
 
 // ─── Load satu gambar ke Image element ───
 function loadImg(src){
@@ -828,71 +883,120 @@ function loadImg(src){
   });
 }
 
-// ─── Gabungkan outfit jadi collage grid biar AI lihat setiap bagian jelas ───
-async function buildOutfitCanvas(slots){
-  // Layout 3 kolom x 2 baris = 6 slot
+// ─── Load File object jadi Image ───
+function loadFile(file){
+  return new Promise((res, rej) => {
+    const reader = new FileReader();
+    reader.onload = e => {
+      const img = new Image();
+      img.onload  = () => res(img);
+      img.onerror = rej;
+      img.src = e.target.result;
+    };
+    reader.onerror = rej;
+    reader.readAsDataURL(file);
+  });
+}
+
+// ─── Build canvas: profile screenshot (kiri) + outfit grid (kanan) ───
+async function buildOutfitCanvas(slots, profileFile){
+  const HALF_W  = 512;
+  const TOTAL_H = 576;
+
+  // Outfit grid kanan: 3 col x 2 row
   const COLS = 3, ROWS = 2;
-  const CELL = 256;          // ukuran tiap sel
-  const PAD  = 10;           // padding dalam sel
-  const LABEL_H = 28;        // tinggi label teks
-  const W = COLS * CELL;
-  const H = ROWS * (CELL + LABEL_H);
+  const CELL    = Math.floor(HALF_W / COLS);      // 170
+  const LABEL_H = 24;
+  const PAD     = 8;
+
+  const hasProfile = !!profileFile;
+  const TOTAL_W = hasProfile ? HALF_W * 2 : HALF_W;
 
   const canvas = document.createElement("canvas");
-  canvas.width  = W;
-  canvas.height = H;
+  canvas.width  = TOTAL_W;
+  canvas.height = TOTAL_H;
   const ctx = canvas.getContext("2d");
 
-  // Background gelap bersih
-  ctx.fillStyle = "#111114";
-  ctx.fillRect(0, 0, W, H);
+  // BG gelap
+  ctx.fillStyle = "#0d0d0f";
+  ctx.fillRect(0, 0, TOTAL_W, TOTAL_H);
 
-  // Urutan slot di grid (kiri-atas ke kanan-bawah)
+  const outfitOffsetX = hasProfile ? HALF_W : 0;
+
+  // ── Kiri: foto profil ──
+  if(hasProfile){
+    try{
+      const profImg = await loadFile(profileFile);
+      // Crop ke fit di sisi kiri
+      const aspect = profImg.width / profImg.height;
+      const drawH  = TOTAL_H;
+      const drawW  = drawH * aspect;
+      const dx     = outfitOffsetX / 2 - drawW / 2; // tengah di setengah kiri
+      ctx.drawImage(profImg, Math.max(0, dx), 0, Math.min(drawW, HALF_W), drawH);
+
+      // Label "Profile"
+      ctx.fillStyle = "rgba(0,0,0,.45)";
+      ctx.fillRect(0, 0, HALF_W, 28);
+      ctx.fillStyle = "#f5a623";
+      ctx.font = "bold 12px Inter,sans-serif";
+      ctx.textAlign = "center";
+      ctx.fillText("PROFILE SCREENSHOT", HALF_W / 2, 18);
+
+      // Garis pemisah
+      ctx.strokeStyle = "#2e2e38";
+      ctx.lineWidth = 1;
+      ctx.beginPath();
+      ctx.moveTo(HALF_W, 0);
+      ctx.lineTo(HALF_W, TOTAL_H);
+      ctx.stroke();
+    }catch(e){ console.warn("Profile load error", e); }
+  }
+
+  // ── Kanan (atau full): outfit grid ──
   const order = [
-    { key:"rambut", label:"Hair"   },
-    { key:"mata",   label:"Eyes"   },
-    { key:"masker", label:"Mask"   },
-    { key:"baju",   label:"Top"    },
-    { key:"celana", label:"Bottom" },
-    { key:"sepatu", label:"Shoes"  },
+    {key:"rambut", label:"Hair"},
+    {key:"mata",   label:"Eyes"},
+    {key:"masker", label:"Mask"},
+    {key:"baju",   label:"Top"},
+    {key:"celana", label:"Bottom"},
+    {key:"sepatu", label:"Shoes"},
   ];
 
+  const cellH = Math.floor(TOTAL_H / ROWS);
+
   for(let i = 0; i < order.length; i++){
-    const { key, label } = order[i];
+    const {key, label} = order[i];
     const col = i % COLS;
     const row = Math.floor(i / COLS);
-    const x = col * CELL;
-    const y = row * (CELL + LABEL_H);
+    const x   = outfitOffsetX + col * CELL;
+    const y   = row * cellH;
 
-    // Cell border
+    // Cell bg + border
+    ctx.fillStyle = "#18181c";
+    ctx.fillRect(x, y, CELL, cellH);
     ctx.strokeStyle = "#2e2e38";
     ctx.lineWidth = 1;
-    ctx.strokeRect(x + .5, y + .5, CELL - 1, CELL + LABEL_H - 1);
+    ctx.strokeRect(x + .5, y + .5, CELL - 1, cellH - 1);
 
-    // Label teks
+    // Label
     ctx.fillStyle = "#f5a623";
-    ctx.font = "bold 13px Inter, sans-serif";
+    ctx.font = "bold 11px Inter,sans-serif";
     ctx.textAlign = "center";
-    ctx.fillText(label, x + CELL / 2, y + LABEL_H - 8);
+    ctx.fillText(label, x + CELL / 2, y + LABEL_H - 6);
 
-    // Gambar outfit
+    // Gambar
     const src = slots[key];
     if(src){
       try{
         const img = await loadImg(src);
-        const imgX = x + PAD;
-        const imgY = y + LABEL_H;
-        const imgW = CELL - PAD * 2;
-        const imgH = CELL - PAD * 2;
-        ctx.drawImage(img, imgX, imgY, imgW, imgH);
+        ctx.drawImage(img, x + PAD, y + LABEL_H, CELL - PAD * 2, cellH - LABEL_H - PAD);
       }catch(e){ console.warn("Skip", key, e.message); }
     } else {
-      // Slot kosong
       ctx.fillStyle = "#1e1e24";
-      ctx.fillRect(x + 1, y + LABEL_H, CELL - 2, CELL - 2);
+      ctx.fillRect(x + 1, y + LABEL_H, CELL - 2, cellH - LABEL_H - 1);
       ctx.fillStyle = "#3a3a4a";
-      ctx.font = "12px Inter, sans-serif";
-      ctx.fillText("–", x + CELL / 2, y + LABEL_H + CELL / 2);
+      ctx.font = "11px Inter,sans-serif";
+      ctx.fillText("–", x + CELL / 2, y + cellH / 2 + 4);
     }
   }
 
@@ -903,14 +1007,17 @@ async function buildOutfitCanvas(slots){
 async function generateCharacter(){
   const btn     = document.getElementById("genBtn");
   const aiArea  = document.getElementById("ai-result");
+  const fileIn  = document.getElementById("profileUpload");
   if(!btn || !aiArea) return;
 
-  // Cek minimal ada 1 slot terisi
   const hasAny = Object.values(_currentSlots).some(v => typeof v === "string" && v);
   if(!hasAny){
     aiArea.innerHTML = `<div class="ai-result-card"><p class="ai-err">Tidak ada outfit yang terdeteksi.</p></div>`;
     return;
   }
+
+  const profileFile = fileIn && fileIn.files[0] ? fileIn.files[0] : null;
+  const nickname    = _playerName || "PLAYER";
 
   btn.disabled = true;
   btn.innerHTML = `<span class="spin"></span> Generating...`;
@@ -918,20 +1025,36 @@ async function generateCharacter(){
     <div class="ai-result-card">
       <div class="loading-wrap" style="padding:30px 0">
         <div class="ring"></div>
-        <span>Menyatukan outfit ke canvas...</span>
+        <span>Menyusun referensi gambar...</span>
       </div>
     </div>`;
 
   try{
-    // Step 1: gabung outfit jadi satu blob
-    const blob = await buildOutfitCanvas(_currentSlots);
+    const blob = await buildOutfitCanvas(_currentSlots, profileFile);
 
-    aiArea.querySelector("span").textContent = "Mengirim ke AI... (bisa 20-40 detik)";
+    const span = aiArea.querySelector("span");
+    if(span) span.textContent = "Mengirim ke AI... (bisa 30-60 detik)";
 
-    // Step 2: upload ke API
+    const profileNote = profileFile
+      ? `The left half of the reference image is the player's in-game profile screenshot — use it clearly as the background of the poster, keep all text and icons readable.`
+      : ``;
+
+    const prompt = `Create a cinematic digital poster for a Free Fire game player named "${nickname}".
+
+POSTER LAYOUT:
+- BACKGROUND: ${profileFile
+    ? "Use the profile screenshot (left side of reference image) clearly displayed behind everything — do NOT blur or cover it, all details like icon, name, stats, textures must remain fully readable."
+    : "A dramatic dark background with glowing embers and cinematic lighting."}
+- FOREGROUND: A stylized anime/game-art character (NOT photorealistic) sitting on a throne, one hand resting on the armrest, the other holding a weapon, looking down with disdain.
+- CHARACTER OUTFIT: Strictly use all outfit pieces shown in the right-side grid of the reference image: exact hair style and color (fully attached to head, NOT bald), exact eye/face accessories, exact top/jacket colors and design unchanged, exact bottom/pants colors and design unchanged, exact shoes.
+- TEXT OVERLAY: At the center of the poster, add bold glowing 3D text that reads "${nickname}" — use a golden-red spread effect with gold and silver star particles dripping from the letters.
+- EFFECTS: Dramatic rain falling, floating light pearls/orbs, cinematic volumetric lighting, soft shadows highlighting the character and background. Character and background must NOT overlap confusingly — keep both clearly distinct.
+
+STYLE: High-quality anime game-art / digital painting style (NOT realistic / NOT photographic). Think Free Fire official art. 4K resolution, vivid colors.`;
+
     const fd = new FormData();
-    fd.append("image", blob, "outfit.png");
-    fd.append("param", "Create a photorealistic full body Free Fire game character render. STRICTLY use all outfit pieces shown in the reference grid: replicate the exact hair style, hair color, and volume (hair MUST be fully attached to the head, absolutely NOT bald), replicate the exact eye and face accessory, replicate the exact top/jacket/shirt with all its colors and details unchanged, replicate the exact pants/bottom with all colors and patterns unchanged, replicate the exact shoes. Show the COMPLETE full body from head to toe, no cropping. The character must look like a high-end cinematic game render, semi-realistic with sharp textures, dramatic studio lighting, and photorealistic skin. Background: a moody gaming room with RGB LED lights glowing in red and blue, a gaming PC setup with multiple monitors visible in the background, dark atmosphere, bokeh depth of field. Ultra HD 4K quality.");
+    fd.append("image", blob, "reference.png");
+    fd.append("param", prompt);
 
     const resp = await fetch("https://api.nexray.web.id/ai/gptimage", {
       method: "POST",
@@ -944,11 +1067,9 @@ async function generateCharacter(){
     let resultSrc = "";
 
     if(ct.includes("image/")){
-      // API langsung return gambar
       const imgBlob = await resp.blob();
       resultSrc = URL.createObjectURL(imgBlob);
     } else {
-      // API return JSON dengan URL / base64
       const json = await resp.json();
       resultSrc = json.url || json.image || json.result || "";
       if(!resultSrc) throw new Error("Respons API tidak berisi gambar.");
@@ -956,12 +1077,12 @@ async function generateCharacter(){
 
     aiArea.innerHTML = `
       <div class="ai-result-card">
-        <div class="section-title">AI Character Generated</div>
+        <div class="section-title">AI Poster — ${nickname}</div>
         <img class="ai-img" src="${resultSrc}"
           onclick="inspect('${resultSrc}')"
           onerror="this.parentElement.innerHTML+='<p class=\\'ai-err\\'>Gambar gagal dimuat.</p>'">
         <p style="font-size:12px;color:var(--muted);margin-top:14px">
-          Klik gambar untuk memperbesar • Dibuat oleh AI dari outfit yang dipakai
+          Klik gambar untuk memperbesar • Poster AI karakter ${nickname}
         </p>
       </div>`;
 
@@ -974,7 +1095,7 @@ async function generateCharacter(){
       </div>`;
   }finally{
     btn.disabled = false;
-    btn.innerHTML = "✦ Generate AI Character";
+    btn.innerHTML = "✦ Generate AI Poster";
   }
 }
 
@@ -1056,7 +1177,8 @@ async function check(){
       if(type === "lainnya") slots.lainnya.push(url);
       else slots[type] = slots[type] || url; // ambil yg pertama per slot
     }
-    _currentSlots = slots; // simpan global buat generateCharacter()
+    _currentSlots = slots;
+    _playerName   = p.name || ""; // simpan nama buat prompt
 
     const outfitParts = [
       {label:"Rambut", slot:"rambut", img: slots.rambut},
@@ -1171,8 +1293,25 @@ async function check(){
           <!-- Legend -->
           <div class="outfit-legend">
             ${legendHTML}
+            <div class="upload-area" onclick="document.getElementById('profileUpload').click()">
+              <input type="file" id="profileUpload" accept="image/*"
+                onchange="
+                  const f=this.files[0];
+                  if(!f)return;
+                  const prev=document.getElementById('uploadPreview');
+                  prev.src=URL.createObjectURL(f);
+                  prev.style.display='block';
+                  document.getElementById('uploadLabelText').textContent='Foto terpilih: '+f.name;
+                ">
+              <label class="upload-label" onclick="event.stopPropagation()">
+                <span class="upload-icon">📸</span>
+                <strong>Upload Screenshot Profil</strong>
+                <span id="uploadLabelText">Opsional — untuk poster lebih personal<br>Klik atau tap di sini</span>
+              </label>
+              <img id="uploadPreview" class="upload-preview">
+            </div>
             <button class="gen-btn" id="genBtn" onclick="generateCharacter()">
-              ✦ Generate AI Character
+              ✦ Generate AI Poster
             </button>
           </div>
 

@@ -413,224 +413,13 @@ height:100%;
 object-fit:cover;
 }
 
-/* ─── OUTFIT BODY ─── */
-.outfit-body-wrap{
-display:flex;
-justify-content:center;
-padding:10px 0;
-}
-
-.body-figure{
-position:relative;
-width:220px;
-height:440px;
-}
-
-/* silhouette */
-.body-figure::before{
-content:"";
-position:absolute;
-inset:0;
-background:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 220 440'%3E%3Cellipse cx='110' cy='52' rx='36' ry='38' fill='%23222228' stroke='%232e2e38' stroke-width='1.5'/%3E%3Crect x='72' y='90' width='76' height='4' rx='2' fill='%232e2e38'/%3E%3Crect x='60' y='92' width='100' height='130' rx='16' fill='%23222228' stroke='%232e2e38' stroke-width='1.5'/%3E%3Crect x='68' y='220' width='84' height='130' rx='16' fill='%23222228' stroke='%232e2e38' stroke-width='1.5'/%3E%3Crect x='60' y='93' width='28' height='100' rx='12' fill='%23222228' stroke='%232e2e38' stroke-width='1.5'/%3E%3Crect x='132' y='93' width='28' height='100' rx='12' fill='%23222228' stroke='%232e2e38' stroke-width='1.5'/%3E%3Crect x='72' y='348' width='30' height='70' rx='14' fill='%23222228' stroke='%232e2e38' stroke-width='1.5'/%3E%3Crect x='118' y='348' width='30' height='70' rx='14' fill='%23222228' stroke='%232e2e38' stroke-width='1.5'/%3E%3C/svg%3E") no-repeat center/contain;
-opacity:.7;
-pointer-events:none;
-}
-
-/* slot areas */
-.outfit-slot{
-position:absolute;
-display:flex;
-align-items:center;
-justify-content:center;
-}
-
-/* HEAD: hair + eyes + mask all stacked */
-.slot-head{
-top:6px;
-left:50%;
-transform:translateX(-50%);
-width:82px;
-height:82px;
-}
-
-.slot-head .layer{
-position:absolute;
-inset:0;
-border-radius:50%;
-overflow:hidden;
-}
-
-.slot-head .layer img{
-width:100%;
-height:100%;
-object-fit:cover;
-mix-blend-mode:screen;
-opacity:.92;
-}
-
-/* first layer (hair) = normal so it shows underneath */
-.slot-head .layer:first-child img{
-mix-blend-mode:normal;
-opacity:1;
-}
-
-/* shirt */
-.slot-shirt{
-top:98px;
-left:50%;
-transform:translateX(-50%);
-width:88px;
-height:110px;
-border-radius:12px;
-overflow:hidden;
-border:1.5px solid var(--border);
-background:var(--surface2);
-}
-
-.slot-shirt img{
-width:100%;
-height:100%;
-object-fit:cover;
-}
-
-/* pants */
-.slot-pants{
-top:220px;
-left:50%;
-transform:translateX(-50%);
-width:76px;
-height:110px;
-border-radius:12px;
-overflow:hidden;
-border:1.5px solid var(--border);
-background:var(--surface2);
-}
-
-.slot-pants img{
-width:100%;
-height:100%;
-object-fit:cover;
-}
-
-/* shoes – two side by side */
-.slot-shoes-left{
-bottom:0;
-left:52px;
-width:40px;
-height:60px;
-border-radius:10px;
-overflow:hidden;
-border:1.5px solid var(--border);
-background:var(--surface2);
-}
-
-.slot-shoes-right{
-bottom:0;
-right:52px;
-width:40px;
-height:60px;
-border-radius:10px;
-overflow:hidden;
-border:1.5px solid var(--border);
-background:var(--surface2);
-}
-
-.slot-shoes-left img,
-.slot-shoes-right img{
-width:100%;
-height:100%;
-object-fit:cover;
-}
-
-/* labels */
-.slot-label{
-position:absolute;
-font-size:9px;
-font-weight:600;
-letter-spacing:.6px;
-text-transform:uppercase;
-color:var(--muted);
+/* ─── GENERATE CARD ─── */
+.generate-card{
 background:var(--surface);
 border:1px solid var(--border);
-border-radius:6px;
-padding:2px 6px;
-white-space:nowrap;
-pointer-events:none;
-}
-
-.label-head{top:-22px;left:50%;transform:translateX(-50%)}
-.label-shirt{top:-20px;left:50%;transform:translateX(-50%)}
-.label-pants{top:-20px;left:50%;transform:translateX(-50%)}
-.label-shoe-l{bottom:-18px;left:50%;transform:translateX(-50%)}
-.label-shoe-r{bottom:-18px;left:50%;transform:translateX(-50%)}
-
-/* outfit legend */
-.outfit-legend{
-flex:1;
-padding-left:32px;
-display:flex;
-flex-direction:column;
-justify-content:center;
-gap:14px;
-}
-
-.legend-item{
-display:flex;
-align-items:center;
-gap:14px;
-background:var(--surface2);
-border:1px solid var(--border);
-border-radius:12px;
-padding:10px 14px;
-cursor:pointer;
-transition:.2s;
-}
-
-.legend-item:hover{
-border-color:var(--gold);
-transform:translateX(3px);
-}
-
-.legend-thumb{
-width:44px;
-height:44px;
-border-radius:8px;
-overflow:hidden;
-border:1px solid var(--border);
-background:var(--bg);
-flex-shrink:0;
-}
-
-.legend-thumb img{
-width:100%;
-height:100%;
-object-fit:cover;
-}
-
-.legend-text{
-display:flex;
-flex-direction:column;
-gap:2px;
-}
-
-.legend-part{
-font-size:10px;
-letter-spacing:.5px;
-text-transform:uppercase;
-color:var(--gold);
-font-weight:600;
-}
-
-.legend-name{
-font-size:13px;
-color:var(--text);
-font-weight:500;
-}
-
-.outfit-container{
-display:flex;
-align-items:flex-start;
-gap:0;
+border-radius:18px;
+padding:24px;
+margin-bottom:20px;
 }
 
 /* ─── POPUP ─── */
@@ -869,8 +658,9 @@ color:var(--muted);
 const PLAYER = "https://ff.cocspedsafliz.workers.dev/uid?uid=";
 const ASSET  = "https://ff.cocspedsafliz.workers.dev/lookup?id=";
 
-let _currentSlots = {};
-let _playerName   = "";
+let _allOutfits = [];   // semua URL outfit mentah dari API
+let _allWeapons = [];   // semua URL senjata mentah dari API
+let _playerName = "";
 
 // ─── Load satu gambar ke Image element ───
 function loadImg(src){
@@ -898,106 +688,93 @@ function loadFile(file){
   });
 }
 
-// ─── Build canvas: profile screenshot (kiri) + outfit grid (kanan) ───
-async function buildOutfitCanvas(slots, profileFile){
-  const HALF_W  = 512;
-  const TOTAL_H = 576;
+// ─── Build canvas: profile (atas) + semua outfit + senjata (bawah) ───
+async function buildOutfitCanvas(outfits, weapons, profileFile){
+  const CELL    = 120;   // ukuran tiap item
+  const PAD     = 6;
+  const LABEL_H = 20;
+  const COLS    = 6;     // 6 item per baris
 
-  // Outfit grid kanan: 3 col x 2 row
-  const COLS = 3, ROWS = 2;
-  const CELL    = Math.floor(HALF_W / COLS);      // 170
-  const LABEL_H = 24;
-  const PAD     = 8;
+  // Semua item: outfit dulu, lalu senjata
+  const items = [
+    ...outfits.map(u => ({url:u, label:"Outfit"})),
+    ...weapons.map(u => ({url:u, label:"Weapon"})),
+  ].filter(i => i.url);
 
-  const hasProfile = !!profileFile;
-  const TOTAL_W = hasProfile ? HALF_W * 2 : HALF_W;
+  const rows   = Math.ceil(items.length / COLS) || 1;
+  const GRID_W = COLS * CELL;
+  const GRID_H = rows * (CELL + LABEL_H);
+
+  // Profile: lebar penuh GRID_W, tinggi proporsional
+  const PROF_H = profileFile ? Math.round(GRID_W * 0.56) : 0; // ~16:9
 
   const canvas = document.createElement("canvas");
-  canvas.width  = TOTAL_W;
-  canvas.height = TOTAL_H;
+  canvas.width  = GRID_W;
+  canvas.height = PROF_H + GRID_H;
   const ctx = canvas.getContext("2d");
 
-  // BG gelap
   ctx.fillStyle = "#0d0d0f";
-  ctx.fillRect(0, 0, TOTAL_W, TOTAL_H);
+  ctx.fillRect(0, 0, canvas.width, canvas.height);
 
-  const outfitOffsetX = hasProfile ? HALF_W : 0;
-
-  // ── Kiri: foto profil ──
-  if(hasProfile){
+  // ── Baris atas: foto profil ──
+  if(profileFile){
     try{
       const profImg = await loadFile(profileFile);
-      // Crop ke fit di sisi kiri
-      const aspect = profImg.width / profImg.height;
-      const drawH  = TOTAL_H;
-      const drawW  = drawH * aspect;
-      const dx     = outfitOffsetX / 2 - drawW / 2; // tengah di setengah kiri
-      ctx.drawImage(profImg, Math.max(0, dx), 0, Math.min(drawW, HALF_W), drawH);
+      // cover fit
+      const scale = Math.max(GRID_W / profImg.width, PROF_H / profImg.height);
+      const dw = profImg.width  * scale;
+      const dh = profImg.height * scale;
+      const dx = (GRID_W - dw) / 2;
+      const dy = (PROF_H - dh) / 2;
+      ctx.save();
+      ctx.rect(0, 0, GRID_W, PROF_H);
+      ctx.clip();
+      ctx.drawImage(profImg, dx, dy, dw, dh);
+      ctx.restore();
 
-      // Label "Profile"
-      ctx.fillStyle = "rgba(0,0,0,.45)";
-      ctx.fillRect(0, 0, HALF_W, 28);
+      // strip label
+      ctx.fillStyle = "rgba(0,0,0,.5)";
+      ctx.fillRect(0, 0, GRID_W, 24);
       ctx.fillStyle = "#f5a623";
-      ctx.font = "bold 12px Inter,sans-serif";
+      ctx.font = "bold 11px Inter,sans-serif";
       ctx.textAlign = "center";
-      ctx.fillText("PROFILE SCREENSHOT", HALF_W / 2, 18);
+      ctx.fillText("PROFILE SCREENSHOT", GRID_W / 2, 15);
 
-      // Garis pemisah
+      // separator
       ctx.strokeStyle = "#2e2e38";
       ctx.lineWidth = 1;
       ctx.beginPath();
-      ctx.moveTo(HALF_W, 0);
-      ctx.lineTo(HALF_W, TOTAL_H);
+      ctx.moveTo(0, PROF_H);
+      ctx.lineTo(GRID_W, PROF_H);
       ctx.stroke();
-    }catch(e){ console.warn("Profile load error", e); }
+    }catch(e){ console.warn("Profile err", e); }
   }
 
-  // ── Kanan (atau full): outfit grid ──
-  const order = [
-    {key:"rambut", label:"Hair"},
-    {key:"mata",   label:"Eyes"},
-    {key:"masker", label:"Mask"},
-    {key:"baju",   label:"Top"},
-    {key:"celana", label:"Bottom"},
-    {key:"sepatu", label:"Shoes"},
-  ];
-
-  const cellH = Math.floor(TOTAL_H / ROWS);
-
-  for(let i = 0; i < order.length; i++){
-    const {key, label} = order[i];
+  // ── Baris bawah: semua item grid ──
+  for(let i = 0; i < items.length; i++){
     const col = i % COLS;
     const row = Math.floor(i / COLS);
-    const x   = outfitOffsetX + col * CELL;
-    const y   = row * cellH;
+    const x   = col * CELL;
+    const y   = PROF_H + row * (CELL + LABEL_H);
 
-    // Cell bg + border
+    // Cell
     ctx.fillStyle = "#18181c";
-    ctx.fillRect(x, y, CELL, cellH);
+    ctx.fillRect(x, y, CELL, CELL + LABEL_H);
     ctx.strokeStyle = "#2e2e38";
     ctx.lineWidth = 1;
-    ctx.strokeRect(x + .5, y + .5, CELL - 1, cellH - 1);
+    ctx.strokeRect(x + .5, y + .5, CELL - 1, CELL + LABEL_H - 1);
 
     // Label
-    ctx.fillStyle = "#f5a623";
-    ctx.font = "bold 11px Inter,sans-serif";
+    ctx.fillStyle = items[i].label === "Weapon" ? "#60a5fa" : "#f5a623";
+    ctx.font = "bold 9px Inter,sans-serif";
     ctx.textAlign = "center";
-    ctx.fillText(label, x + CELL / 2, y + LABEL_H - 6);
+    ctx.fillText(items[i].label + " " + (i + 1), x + CELL / 2, y + LABEL_H - 5);
 
     // Gambar
-    const src = slots[key];
-    if(src){
-      try{
-        const img = await loadImg(src);
-        ctx.drawImage(img, x + PAD, y + LABEL_H, CELL - PAD * 2, cellH - LABEL_H - PAD);
-      }catch(e){ console.warn("Skip", key, e.message); }
-    } else {
-      ctx.fillStyle = "#1e1e24";
-      ctx.fillRect(x + 1, y + LABEL_H, CELL - 2, cellH - LABEL_H - 1);
-      ctx.fillStyle = "#3a3a4a";
-      ctx.font = "11px Inter,sans-serif";
-      ctx.fillText("–", x + CELL / 2, y + cellH / 2 + 4);
-    }
+    try{
+      const img = await loadImg(items[i].url);
+      ctx.drawImage(img, x + PAD, y + LABEL_H, CELL - PAD * 2, CELL - PAD * 2);
+    }catch(e){ console.warn("Skip item", i, e.message); }
   }
 
   return new Promise(res => canvas.toBlob(res, "image/png"));
@@ -1010,9 +787,8 @@ async function generateCharacter(){
   const fileIn  = document.getElementById("profileUpload");
   if(!btn || !aiArea) return;
 
-  const hasAny = Object.values(_currentSlots).some(v => typeof v === "string" && v);
-  if(!hasAny){
-    aiArea.innerHTML = `<div class="ai-result-card"><p class="ai-err">Tidak ada outfit yang terdeteksi.</p></div>`;
+  if(!_allOutfits.length && !_allWeapons.length){
+    aiArea.innerHTML = `<div class="ai-result-card"><p class="ai-err">Tidak ada outfit yang terdeteksi. Cari UID dulu.</p></div>`;
     return;
   }
 
@@ -1030,7 +806,7 @@ async function generateCharacter(){
     </div>`;
 
   try{
-    const blob = await buildOutfitCanvas(_currentSlots, profileFile);
+    const blob = await buildOutfitCanvas(_allOutfits, _allWeapons, profileFile);
 
     const span = aiArea.querySelector("span");
     if(span) span.textContent = "Mengirim ke AI... (bisa 30-60 detik)";
@@ -1154,61 +930,23 @@ async function check(){
     const weapons    = await loadMany(weaponIds);
     const outfits    = await loadMany(outfitIds);
 
-    // ─── Classify each outfit URL by keywords in filename ───
-    function classifyOutfit(url){
-      if(!url) return "lainnya";
-      const u = url.toLowerCase();
-      // urutan penting: lebih spesifik duluan
-      if(u.includes("headadditive") || u.includes("head_additive")) return "mata";
-      if(u.includes("hair"))         return "rambut";
-      if(u.includes("shoe"))         return "sepatu";
-      if(u.includes("bottom"))       return "celana";
-      if(u.includes("_top_") || u.includes("_top.") || u.includes("top_cos") || u.includes("cos_top")) return "baju";
-      if(u.includes("mask") || u.includes("face"))   return "masker";
-      if(u.includes("head"))         return "masker";  // helmet/kepala generic
-      return "lainnya";
-    }
+    // Simpan semua URL mentah ke global
+    _allOutfits = outfits.filter(Boolean);
+    _allWeapons = weapons.filter(Boolean);
+    _playerName = p.name || "";
 
-    // Bangun slot map dari semua outfit URL
-    const slots = { rambut:"", mata:"", masker:"", baju:"", celana:"", sepatu:"", lainnya:[] };
-    for(const url of outfits){
-      if(!url) continue;
-      const type = classifyOutfit(url);
-      if(type === "lainnya") slots.lainnya.push(url);
-      else slots[type] = slots[type] || url; // ambil yg pertama per slot
-    }
-    _currentSlots = slots;
-    _playerName   = p.name || ""; // simpan nama buat prompt
+    // Grid semua outfit (raw)
+    const outfitGridHTML = _allOutfits.map((url, i) =>
+      `<div class="weapon-item" onclick="inspect('${url}')">
+         <img src="${url}" onerror="this.style.opacity='.2'">
+       </div>`
+    ).join("") || `<p style="color:var(--muted);font-size:13px">Tidak ada outfit terdeteksi</p>`;
 
-    const outfitParts = [
-      {label:"Rambut", slot:"rambut", img: slots.rambut},
-      {label:"Mata",   slot:"mata",   img: slots.mata},
-      {label:"Masker", slot:"masker", img: slots.masker},
-      {label:"Baju",   slot:"baju",   img: slots.baju},
-      {label:"Celana", slot:"celana", img: slots.celana},
-      {label:"Sepatu", slot:"sepatu", img: slots.sepatu},
-    ];
-
-    // weapon grid html
-    const weaponHTML = weapons.map(w => w
-      ? `<div class="weapon-item" onclick="inspect('${w}')"><img src="${w}" onerror="this.style.opacity='.2'"></div>`
-      : ""
-    ).join("");
-
-    // outfit legend
-    const legendHTML = outfitParts.map(o => `
-      <div class="legend-item" ${o.img?`onclick="inspect('${o.img}')"`:"style='opacity:.45'"}>
-        <div class="legend-thumb">${o.img?`<img src="${o.img}" onerror="this.style.opacity='.2'">`:""}</div>
-        <div class="legend-text">
-          <span class="legend-part">${o.label}</span>
-          <span class="legend-name">${o.img ? "Equipped" : "Kosong"}</span>
-        </div>
-      </div>`).join("");
-
-    // head layers: rambut (base) → mata → masker (top) — semua transparan menyatu
-    const headLayers = [slots.rambut, slots.mata, slots.masker].map(src => src
-      ? `<div class="layer"><img src="${src}" onerror="this.style.opacity='.1'"></div>`
-      : ""
+    // Grid senjata
+    const weaponHTML = _allWeapons.map(w =>
+      `<div class="weapon-item" onclick="inspect('${w}')">
+         <img src="${w}" onerror="this.style.opacity='.2'">
+       </div>`
     ).join("");
 
     res.innerHTML = `
@@ -1250,76 +988,11 @@ async function check(){
         </div>
       </div>
 
-      <!-- OUTFIT BODY -->
+      <!-- OUTFIT GRID (semua item langsung) -->
       <div class="section-card">
-        <div class="section-title">Outfit Set</div>
-        <div class="outfit-container">
-
-          <!-- Body figure -->
-          <div class="outfit-body-wrap">
-            <div class="body-figure">
-
-              <!-- HEAD: rambut + mata + masker stacked transparent -->
-              <div class="outfit-slot slot-head">
-                <span class="slot-label label-head">Kepala</span>
-                ${headLayers || `<div style="width:82px;height:82px;border-radius:50%;background:var(--surface2);border:1px solid var(--border)"></div>`}
-              </div>
-
-              <!-- SHIRT -->
-              <div class="outfit-slot slot-shirt">
-                <span class="slot-label label-shirt">Baju</span>
-                ${slots.baju ? `<img src="${slots.baju}" style="width:100%;height:100%;object-fit:cover" onerror="this.style.opacity='.2'">` : ""}
-              </div>
-
-              <!-- PANTS -->
-              <div class="outfit-slot slot-pants">
-                <span class="slot-label label-pants">Celana</span>
-                ${slots.celana ? `<img src="${slots.celana}" style="width:100%;height:100%;object-fit:cover" onerror="this.style.opacity='.2'">` : ""}
-              </div>
-
-              <!-- SHOES -->
-              <div class="outfit-slot slot-shoes-left">
-                <span class="slot-label label-shoe-l">Sepatu</span>
-                ${slots.sepatu ? `<img src="${slots.sepatu}" style="width:100%;height:100%;object-fit:cover" onerror="this.style.opacity='.2'">` : ""}
-              </div>
-              <div class="outfit-slot slot-shoes-right">
-                <span class="slot-label label-shoe-r">Sepatu</span>
-                ${slots.sepatu ? `<img src="${slots.sepatu}" style="width:100%;height:100%;object-fit:cover" onerror="this.style.opacity='.2'">` : ""}
-              </div>
-
-            </div>
-          </div>
-
-          <!-- Legend -->
-          <div class="outfit-legend">
-            ${legendHTML}
-            <div class="upload-area" onclick="document.getElementById('profileUpload').click()">
-              <input type="file" id="profileUpload" accept="image/*"
-                onchange="
-                  const f=this.files[0];
-                  if(!f)return;
-                  const prev=document.getElementById('uploadPreview');
-                  prev.src=URL.createObjectURL(f);
-                  prev.style.display='block';
-                  document.getElementById('uploadLabelText').textContent='Foto terpilih: '+f.name;
-                ">
-              <label class="upload-label" onclick="event.stopPropagation()">
-                <span class="upload-icon">📸</span>
-                <strong>Upload Screenshot Profil</strong>
-                <span id="uploadLabelText">Opsional — untuk poster lebih personal<br>Klik atau tap di sini</span>
-              </label>
-              <img id="uploadPreview" class="upload-preview">
-            </div>
-            <button class="gen-btn" id="genBtn" onclick="generateCharacter()">
-              ✦ Generate AI Poster
-            </button>
-          </div>
-
-        </div>
+        <div class="section-title">Outfit Equipped</div>
+        <div class="weapon-grid">${outfitGridHTML}</div>
       </div>
-
-      <!-- AI RESULT (muncul setelah generate) -->
-      <div id="ai-result"></div>
 
       <!-- WEAPONS -->
       ${weaponHTML ? `
@@ -1327,6 +1000,39 @@ async function check(){
         <div class="section-title">Weapon Showcase</div>
         <div class="weapon-grid">${weaponHTML}</div>
       </div>` : ""}
+
+      <!-- GENERATE CARD -->
+      <div class="generate-card">
+        <div class="section-title">Generate AI Poster</div>
+        <p style="font-size:13px;color:var(--muted);margin-bottom:16px">
+          Upload screenshot profil kamu (opsional), lalu klik generate untuk membuat poster sinematik AI.
+        </p>
+
+        <div class="upload-area" onclick="document.getElementById('profileUpload').click()">
+          <input type="file" id="profileUpload" accept="image/*"
+            onchange="
+              const f=this.files[0];
+              if(!f)return;
+              const prev=document.getElementById('uploadPreview');
+              prev.src=URL.createObjectURL(f);
+              prev.style.display='block';
+              document.getElementById('uploadLabelText').textContent='✓ '+f.name;
+            ">
+          <label class="upload-label" onclick="event.stopPropagation()">
+            <span class="upload-icon">📸</span>
+            <strong>Upload Screenshot Profil In-Game</strong>
+            <span id="uploadLabelText">Opsional — klik atau tap di sini</span>
+          </label>
+          <img id="uploadPreview" class="upload-preview">
+        </div>
+
+        <button class="gen-btn" id="genBtn" onclick="generateCharacter()">
+          ✦ Generate AI Poster
+        </button>
+      </div>
+
+      <!-- AI RESULT -->
+      <div id="ai-result"></div>
 
       <!-- PET -->
       ${pet ? `
